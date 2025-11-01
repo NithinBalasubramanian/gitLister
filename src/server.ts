@@ -5,8 +5,8 @@ import userRouter from './router/userRouter';
 import publicFetchRouter from './router/publicFetchRouter';
 import dotenv from 'dotenv';
 dotenv.config();
-const cors = require('cors')
-const bodyParser = require('body-parser')
+import cors from 'cors';
+import bodyParser from 'body-parser';
 
 const app = express();
 

@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import axios from 'axios';
 
+import redisClient, { isRedisConnected } from '../lib/redisClient';
+
 type RepoListType = {
     id: number,
     name: string,
@@ -20,6 +22,17 @@ export const fetchGitRepo = async (req: Request, res: Response) => {
 
 export const fetchGitRepoByUser = async (req: Request, res: Response) => {
     const { userName } = req.params;
+    const key = userName.toLowerCase()
+
+    const data = isRedisConnected() ? await redisClient.get(key) : null;
+    if (data) {
+        return res.json({
+            message: 'Fetched Repositories from user successfully-catche',
+            data: JSON.parse(data)
+        });
+    }
+
+
     const repo = await axios.get(`https://api.github.com/users/${userName}/repos`)
     if (repo.status === 200 && repo.data.length > 0) {
         const data = repo.data;
@@ -31,8 +44,11 @@ export const fetchGitRepoByUser = async (req: Request, res: Response) => {
             description: item.description,
             img: item.owner.avatar_url
         }));
+        if (isRedisConnected()) {
+            await redisClient.setEx(key, 3600, JSON.stringify(listData));
+        }
         return res.json({
-            message: 'No Repositories found for this user',
+            message: 'Fetched Repositories from user successfully',
             data: listData
         })
     }
@@ -45,7 +61,21 @@ export const fetchGitRepoByUser = async (req: Request, res: Response) => {
 }
 
 export const fetchNews = async (req: Request, res: Response) => {
+    const key = "newsData";
+
+    const data = isRedisConnected() ? await redisClient.get(key) : null;
+    if (data) {
+        return res.json({
+            message: 'Fetched News from successfully-catche',
+            data: JSON.parse(data)
+        });
+    }
+
     const newsData = await axios.get('http://api.mediastack.com/v1/news?access_key=8dac207b11663c2a0324f55f5038fdad');
+    if (isRedisConnected()) {
+        await redisClient.setEx(key, 3600, JSON.stringify(newsData.data));
+    }
+    
     return res.json({
         message: 'News fetched successfully',
         data: newsData.data
