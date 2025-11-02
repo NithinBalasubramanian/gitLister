@@ -34,8 +34,7 @@ app.get('/healthCheck',(req: Request,res: Response) => {
 })
 
 const options: any = {
-    useUnifiedTopology: true,
-    useNewUrlParser: true
+    useUnifiedTopology: true
   };
   
 const url : string | any = process.env.MONGO_URL;
